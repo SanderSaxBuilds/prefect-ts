@@ -1,0 +1,65 @@
+{
+  "name": "prefect-client-ts",
+  "version": "0.1.0",
+  "description": "Typed TypeScript client for the Prefect REST API: flows, deployments, flow runs, logs, work pools, variables, blocks and automations, for Prefect Cloud and self-hosted servers",
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "npm run typecheck && npm run build && node --test --experimental-strip-types \"test/*.test.ts\"",
+    "test:integration": "node --test --test-concurrency=1 --experimental-strip-types \"test/integration/*.test.ts\"",
+    "spec": "node scripts/fetch-spec.mjs",
+    "types": "node scripts/gen-types.mjs openapi.json src/schema.ts",
+    "prepare": "node scripts/build.mjs"
+  },
+  "keywords": [
+    "prefect",
+    "prefect cloud",
+    "workflow",
+    "orchestration",
+    "data pipelines",
+    "api",
+    "client",
+    "typescript"
+  ],
+  "author": "Alexandr Khrustalev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SanderSaxBuilds/prefect-ts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SanderSaxBuilds/prefect-ts/issues"
+  },
+  "homepage": "https://github.com/SanderSaxBuilds/prefect-ts#readme",
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "~5.9.3"
+  }
+}

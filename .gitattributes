@@ -1,0 +1,3 @@
+* text=auto eol=lf
+openapi.json -diff linguist-generated
+src/schema.ts linguist-generated
