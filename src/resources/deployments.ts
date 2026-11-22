@@ -36,6 +36,14 @@ export class Deployments extends Resource {
     return this.doGet<Deployment>(path`/deployments/name/${flow}/${deployment}`, undefined, options);
   }
 
+  /**
+   * Updates a deployment and returns no content (204).
+   * BadRequestError (400) means the deployment parameters could not be hydrated.
+   * NotFoundError (404) means the deployment or concurrency limit could not be found.
+   * ConflictError (409) covers invalid job variables for the work pool, a mismatch
+   * with an enforced parameter schema, or an invalid deployment parameter schema.
+   * ValidationError (422) reports request validation failures.
+   */
   update(id: string, body: DeploymentUpdate, options?: CallOptions): Promise<void> {
     return this.doPatch(path`/deployments/${id}`, body, options);
   }
@@ -65,9 +73,13 @@ export class Deployments extends Resource {
 
   /**
    * Creates a flow run from a deployment, the REST form of `prefect deployment run`.
-   * Parameters are merged over the deployment's defaults by the server. When the
-   * deployment enforces its parameter schema, bad parameters come back as a
-   * ConflictError (409), not a 422.
+   * The server merges parameters over the deployment's defaults. It returns 201
+   * for a new run or 200 for an existing run with the same idempotency key.
+   * BadRequestError (400) covers failed parameter hydration or a work queue given
+   * for a deployment without a work pool. NotFoundError (404) means the deployment
+   * could not be found. ConflictError (409) covers a mismatch with an enforced
+   * parameter schema or an invalid deployment parameter schema.
+   * ValidationError (422) reports request validation failures.
    */
   createFlowRun(id: string, body: DeploymentFlowRunCreate = {}, options?: CallOptions): Promise<FlowRun> {
     return this.doPost<FlowRun>(path`/deployments/${id}/create_flow_run`, body, options);

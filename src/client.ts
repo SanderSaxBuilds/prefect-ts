@@ -9,7 +9,7 @@ import { Logs, TaskRuns } from './resources/task-runs.ts';
 import { Variables } from './resources/variables.ts';
 import { WorkPools, WorkQueues } from './resources/work-pools.ts';
 
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';
 /** The Prefect REST API version this client was written against (GET /version). */
 export const API_VERSION = '0.8.4';
 export const DEFAULT_API_URL = 'http://127.0.0.1:4200/api';
@@ -140,7 +140,7 @@ export class PrefectClient {
     await this.transport.request<unknown>({ method: 'GET', path: '/ready' }, options);
   }
 
-  /** The Prefect server version, such as "3.9.2" (GET /admin/version). */
+  /** The Prefect server version, such as "3.9.4" (GET /admin/version). */
   serverVersion(options?: RequestOptions): Promise<string> {
     return this.transport.request<string>({ method: 'GET', path: '/admin/version' }, options);
   }

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { FlowRunFailedError, FlowRunTimeoutError, NotFoundError, ServerError } from '../src/index.ts';
+import { ConflictError, FlowRunFailedError, FlowRunTimeoutError, NotFoundError, ServerError } from '../src/index.ts';
 import { splitDeploymentName } from '../src/resources/deployments.ts';
 import { splitBlockRef } from '../src/resources/blocks.ts';
 import { flowRun, json, mockClient } from './helpers.ts';
@@ -77,6 +77,21 @@ describe('deployments', () => {
     const { client, calls } = mockClient(json(201, flowRun()));
     await client.deployments.createFlowRun('d1');
     assert.deepEqual(calls[0]?.body, {});
+  });
+
+  test('createFlowRun exposes the 409 parameter schema error', async () => {
+    const detail = "Error creating flow run: 'three' is not of type 'integer'";
+    const { client, calls } = mockClient(json(409, { detail }));
+    await assert.rejects(
+      client.deployments.createFlowRun('d1', { parameters: { count: 'three' } }),
+      (error: unknown) => {
+        assert.ok(error instanceof ConflictError);
+        assert.equal(error.status, 409);
+        assert.equal(error.detail, detail);
+        return true;
+      },
+    );
+    assert.deepEqual(calls.map((call) => `${call.method} ${call.path}`), ['POST /deployments/d1/create_flow_run']);
   });
 
   test('runByName looks up the deployment, then runs it', async () => {

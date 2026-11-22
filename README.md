@@ -2,7 +2,7 @@
 
 A typed TypeScript client for the [Prefect](https://www.prefect.io) REST API. It runs deployments, follows flow runs to the end, reads their task runs and logs, and manages variables, work pools, blocks and automations, on Prefect Cloud or a self-hosted server.
 
-It has no runtime dependencies and uses the platform `fetch`, so it works in Node 20+, Bun, Deno, Cloudflare Workers and browsers. It ships ES modules and CommonJS. The model types are generated from the OpenAPI document of `prefect server start` 3.9.2, which is checked in as `openapi.json`.
+It has no runtime dependencies and uses the platform `fetch`, so it works in Node 20+, Bun, Deno, Cloudflare Workers and browsers. It ships ES modules and CommonJS. The model types are generated from the Prefect 3.9.4 OpenAPI document checked in as `openapi.json`.
 
 ## Install
 
@@ -213,6 +213,10 @@ Every error extends `PrefectError`. A non-2xx response is a `PrefectApiError` wi
 | 429 | `RateLimitError`, with `retryAfterMs` |
 | 5xx | `ServerError` |
 
+`deployments.createFlowRun()` returns the new run (201) or the existing run with the same idempotency key (200). A 400 means parameter hydration failed or a work queue was specified for a deployment without a work pool. A 404 means the deployment could not be found. A 409 means the parameters failed an enforced schema or the deployment's parameter schema is invalid.
+
+`deployments.update()` succeeds with 204. A 400 means parameter hydration failed. A 404 means the deployment or concurrency limit could not be found. A 409 covers invalid job variables for the work pool, parameters that fail an enforced schema, or an invalid deployment parameter schema. The spec lists 422 for request validation errors on both endpoints.
+
 ```ts
 import { ConflictError, NotFoundError, ValidationError } from 'prefect-client-ts';
 
@@ -265,18 +269,18 @@ The spec marks every field that has a default as optional, because one pydantic 
 
 ## Server behavior worth knowing
 
-These came up while testing against Prefect 3.9.2 and are not in the OpenAPI document:
+These response differences were observed on Prefect 3.9.2. The bundled 3.9.4 spec still describes the same responses for these cases.
 
 - Request validation errors come back as `{"exception_message", "exception_detail", "request_body"}`, not the `{"detail": [...]}` shape the spec lists for 422. A `limit` over 200 is a 422 with a plain string `detail`. `ValidationError` handles all three.
 - `POST /flows/`, `/deployments/` and `/flow_runs/` document a 200 but answer 201 when they create something. `POST /flows/` answers 200 with the existing flow when the name is taken.
-- `create_flow_run` with parameters that fail the deployment's schema is a 409, which the spec does not list.
-- `GET /version` is the REST API version ("0.8.4"). The Prefect release ("3.9.2") is at `GET /admin/version`.
+
+`GET /version` returns the REST API version ("0.8.4"). `GET /admin/version` returns the Prefect release (such as "3.9.4").
 
 ## Development
 
 ```sh
 npm install
-npm test                 # tsc --strict, build, 289 unit tests
+npm test                 # typecheck, build and run the unit suite
 npm run types            # regenerate src/schema.ts from openapi.json
 npm run spec             # save openapi.json from a running server
 ```
