@@ -9,7 +9,7 @@ import { Logs, TaskRuns } from './resources/task-runs.ts';
 import { Variables } from './resources/variables.ts';
 import { WorkPools, WorkQueues } from './resources/work-pools.ts';
 
-export const VERSION = '0.2.0';
+export const VERSION = '0.2.1';
 /** The Prefect REST API version this client was written against (GET /version). */
 export const API_VERSION = '0.8.4';
 export const DEFAULT_API_URL = 'http://127.0.0.1:4200/api';
