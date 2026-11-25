@@ -80,6 +80,16 @@ describe('error detail', () => {
     assert.deepEqual(error.issues[0]?.loc, ['body', 'name']);
     assert.match(error.message, /name: Field required, nam: Extra inputs are not permitted$/);
     assert.deepEqual(error.body, body);
+    assert.deepEqual(error.requestBody, { nam: 1 });
+  });
+
+  test('reads the template validation 422 shape', () => {
+    const body = { error: { line: 1, message: "unexpected 'end of template'", source: '{{ broken' } };
+    const error = apiErrorFor(init(422, body)) as ValidationError;
+    assert.deepEqual(error.detail, body.error);
+    assert.deepEqual(error.issues, []);
+    assert.equal(error.requestBody, undefined);
+    assert.match(error.message, /returned 422: template line 1: unexpected 'end of template'$/);
   });
 
   test('reads the FastAPI 422 shape the spec documents', () => {

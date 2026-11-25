@@ -7,6 +7,27 @@ export interface ValidationIssue {
   ctx?: Record<string, unknown>;
 }
 
+/** The 422 body Prefect's request validation handler sends (InvalidRequestResponse in the spec). */
+export interface InvalidRequestResponse {
+  exception_message: string;
+  exception_detail: ValidationIssue[];
+  request_body: unknown;
+}
+
+/** The body of an HTTP exception (HTTPErrorResponse in the spec). `detail` may be any JSON value. */
+export interface HTTPErrorResponse {
+  detail: unknown;
+}
+
+/** The 422 body sent when a template fails validation (TemplateValidationErrorResponse in the spec). */
+export interface TemplateValidationErrorResponse {
+  error: {
+    line: number;
+    message?: string | null;
+    source: string;
+  };
+}
+
 /** Base class for every error this client throws. */
 export class PrefectError extends Error {
   override name = 'PrefectError';
@@ -23,9 +44,11 @@ export interface ApiErrorInit {
 /**
  * The server answered with a status outside 2xx.
  *
- * `detail` is the server's explanation. Prefect sends `{"detail": "..."}` for most
- * errors and `{"exception_message", "exception_detail", "request_body"}` for request
- * validation errors. Both shapes end up in `detail`.
+ * `detail` is the server's explanation. Prefect sends `{"detail": ...}` for most
+ * errors, `{"exception_message", "exception_detail", "request_body"}` for request
+ * validation errors and `{"error": {"line", "message", "source"}}` for a template that
+ * fails validation. All three end up in `detail`. Since PrefectHQ/prefect#23880 the
+ * OpenAPI document lists these 422 bodies.
  */
 export class PrefectApiError extends PrefectError {
   override name = 'PrefectApiError';
@@ -76,14 +99,23 @@ export class ConflictError extends PrefectApiError {
   override name = 'ConflictError';
 }
 
-/** 422. `issues` lists each field that failed validation. */
+/**
+ * 422. `issues` lists each field that failed validation. `requestBody` is the body the
+ * server echoed back, when it sent one.
+ */
 export class ValidationError extends PrefectApiError {
   override name = 'ValidationError';
   readonly issues: ValidationIssue[];
+  readonly requestBody: unknown;
 
   constructor(init: ApiErrorInit) {
     super(init);
     this.issues = Array.isArray(this.detail) ? (this.detail as ValidationIssue[]) : [];
+    const body = init.body;
+    this.requestBody =
+      body && typeof body === 'object' && !Array.isArray(body) && 'request_body' in body
+        ? (body as InvalidRequestResponse).request_body
+        : undefined;
   }
 }
 
@@ -187,6 +219,7 @@ export function extractDetail(body: unknown): unknown {
     if ('detail' in record) return record.detail;
     if ('exception_detail' in record) return record.exception_detail;
     if ('exception_message' in record) return record.exception_message;
+    if ('error' in record && record.error && typeof record.error === 'object') return record.error;
     if ('message' in record) return record.message;
   }
   if (typeof body === 'string' && body.length > 0) return body;
@@ -222,6 +255,10 @@ function describe(detail: unknown): string {
       return JSON.stringify(issue);
     });
     return `: ${parts.join(', ')}`;
+  }
+  if (typeof detail === 'object' && 'line' in detail && 'source' in detail) {
+    const { line, message } = detail as { line: unknown; message?: unknown };
+    return `: template line ${String(line)}${message ? `: ${String(message)}` : ''}`;
   }
   return `: ${JSON.stringify(detail)}`;
 }

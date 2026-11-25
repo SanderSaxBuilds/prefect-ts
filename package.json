@@ -1,6 +1,6 @@
 {
   "name": "prefect-client-ts",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Typed TypeScript client for the Prefect REST API: flows, deployments, flow runs, logs, work pools, variables, blocks and automations, for Prefect Cloud and self-hosted servers",
   "type": "module",
   "main": "./dist/cjs/index.js",

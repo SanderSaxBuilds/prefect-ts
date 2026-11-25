@@ -271,7 +271,7 @@ The spec marks every field that has a default as optional, because one pydantic 
 
 These response differences were observed on Prefect 3.9.2. The bundled 3.9.4 spec still describes the same responses for these cases.
 
-- Request validation errors come back as `{"exception_message", "exception_detail", "request_body"}`, not the `{"detail": [...]}` shape the spec lists for 422. A `limit` over 200 is a 422 with a plain string `detail`. `ValidationError` handles all three.
+- Request validation errors come back as `{"exception_message", "exception_detail", "request_body"}`, not the `{"detail": [...]}` shape the spec lists for 422. A `limit` over 200 is a 422 with a plain string `detail`. A template that fails `/templates/validate` is a 422 with `{"error": {"line", "message", "source"}}`. `ValidationError` handles all of them. PrefectHQ/prefect#23880, merged 25 Nov 2026, adds these 422 bodies to the OpenAPI document from the next Prefect release.
 - `POST /flows/`, `/deployments/` and `/flow_runs/` document a 200 but answer 201 when they create something. `POST /flows/` answers 200 with the existing flow when the name is taken.
 
 `GET /version` returns the REST API version ("0.8.4"). `GET /admin/version` returns the Prefect release (such as "3.9.4").

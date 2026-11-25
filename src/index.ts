@@ -24,6 +24,9 @@ export {
   FlowRunFailedError,
   parseRetryAfter,
   type ValidationIssue,
+  type InvalidRequestResponse,
+  type HTTPErrorResponse,
+  type TemplateValidationErrorResponse,
 } from './errors.ts';
 export type { FetchLike, RequestOptions, RetryOptions } from './http.ts';
 export { paginate, collect, MAX_PAGE_SIZE, type IterateOptions } from './pagination.ts';
